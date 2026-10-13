@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sistem Akuntansi & Stok Herbal Terstandar SAK EMKM - Klinik RSI Padang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    html, body { overscroll-behavior-y: contain; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Header / Navbar -->
+  <header class="bg-emerald-800 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-emerald-600 p-2 rounded-lg">
+          <i data-lucide="activity" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide">Rumah Sehat Insani (RSI) Padang</h1>
+          <p class="text-xs text-emerald-200">Sistem Akuntansi SAK EMKM - Rekening BRI & AI Adaptive</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span id="cloudStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-emerald-900 text-emerald-200 flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Sync Aktif
+        </span>
+        <button onclick="openModal('modalSettings')" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan API & Cloud
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="bg-emerald-900 text-emerald-100 border-b border-emerald-700">
+    <div class="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto">
+      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 border-emerald-400 text-white">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard & AI Advisor
+      </button>
+      <button onclick="switchTab('input')" id="tab-btn-input" class="tab-btn px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 border-transparent hover:text-white">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> AI Smart Input
+      </button>
+      <button onclick="switchTab('stok')" id="tab-btn-stok" class="tab-btn px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 border-transparent hover:text-white">
+        <i data-lucide="boxes" class="w-4 h-4"></i> Persediaan Herbal (Barang)
+      </button>
+      <button onclick="switchTab('jurnal')" id="tab-btn-jurnal" class="tab-btn px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 border-transparent hover:text-white">
+        <i data-lucide="book-open" class="w-4 h-4"></i> Jurnal Transaksi
+      </button>
+      <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="tab-btn px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 border-transparent hover:text-white">
+        <i data-lucide="file-text" class="w-4 h-4"></i> Laporan Keuangan SAK
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <div id="syncStatus" class="mb-4 hidden p-3 rounded-lg text-sm flex items-center justify-between shadow-sm"></div>
+
+    <!-- TAB 1: DASHBOARD & AI ADVISOR -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Pendapatan Operasional Bersih</p>
+          <h3 id="dashTotalMasuk" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Total Beban Operasional & HPP</p>
+          <h3 id="dashTotalKeluar" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Laba Bersih Operasional</p>
+          <h3 id="dashLabaBersih" class="text-2xl font-bold text-teal-700 mt-1">Rp 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Aset Persediaan Herbal</p>
+          <h3 id="dashNilaiStok" class="text-2xl font-bold text-amber-600 mt-1">Rp 0</h3>
+        </div>
+      </div>
+
+      <!-- KAS & KEWAJIBAN TERUPDATE -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b pb-2">
+          <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i> Neraca Saldo Kas Liquid, Bank BRI & Kewajiban
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-xs text-slate-500 block">1110 - Kas Tunai Klinik</span>
+            <span id="saldoKasTunai" class="text-base font-bold text-slate-800">Rp 0</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-xs text-slate-500 block">1120 - Bank BRI / Rekening</span>
+            <span id="saldoKasBank" class="text-base font-bold text-blue-700">Rp 0</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-xs text-slate-500 block">1130 - Kas Kecil Operasional</span>
+            <span id="saldoKasKecil" class="text-base font-bold text-teal-700">Rp 0</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-xs text-slate-500 block">2100 - Total Kewajiban / Hutang</span>
+            <span id="saldoHutangKredit" class="text-base font-bold text-rose-600">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Financial Advisor Panel -->
+      <div class="bg-white p-6 rounded-xl border border-teal-100 shadow-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/30 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-teal-200/60 pb-3">
+          <div class="flex items-center space-x-2">
+            <div class="bg-emerald-600 text-white p-2 rounded-lg">
+              <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">AI Financial & Inventory Advisor (SAK EMKM)</h2>
+              <p class="text-xs text-slate-500">Konsultasi Keuangan Menengah, Pajak, Diskon, & Perencanaan Stok</p>
+            </div>
+          </div>
+          <button onclick="runDeepSeekAdvisor()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-sm">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> Analisis SAK Otomatis
+          </button>
+        </div>
+        
+        <div id="advisorChatHistory" class="bg-white p-4 rounded-lg border border-slate-200 text-sm text-slate-700 min-h-[160px] max-h-[300px] overflow-y-auto space-y-3">
+          <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 text-xs text-slate-700">
+            <strong>AI Advisor SAK EMKM Siap!</strong> Fitur Transfer Internal Kas Tunai ke Bank BRI telah disempurnakan dengan sistem pencatatan otomatis.
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <input type="text" id="aiChatInput" onkeydown="if(event.key==='Enter') sendAiConsultation()" placeholder="Tanyakan saran rasio keuangan, pajak, atau instruksikan perbaikan sistem..." class="flex-1 p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <button onclick="sendAiConsultation()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="send" class="w-4 h-4"></i> Kirim
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i data-lucide="history" class="w-4 h-4 text-emerald-600"></i> Transaksi Terakhir
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-semibold border-b">
+              <tr>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Jenis</th>
+                <th class="p-3">Subjek / Transaksi</th>
+                <th class="p-3">Klasifikasi SAK</th>
+                <th class="p-3 text-right">Nominal</th>
+              </tr>
+            </thead>
+            <tbody id="dashRecentTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: INPUT TRANSAKSI -->
+    <section id="tab-input" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2 border-b pb-3">
+            <i data-lucide="wand-2" class="w-5 h-5 text-emerald-600"></i>
+            <h2 class="font-bold text-slate-800">AI Adaptive Smart Input</h2>
+          </div>
+          
+          <div class="space-y-3">
+            <label class="block text-xs font-semibold text-slate-600">Opsi 1: Scan / Foto Struk Nota</label>
+            <div class="flex items-center gap-2">
+              <label class="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 border border-dashed border-slate-300 px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition">
+                <i data-lucide="camera" class="w-5 h-5 text-emerald-600"></i>
+                <span id="fileNameDisplay">Buka Kamera / Pilih Struk</span>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleImageSelect(event)" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Opsi 2: Teks Transaksi Mentah</label>
+            <textarea id="aiRawInput" rows="5" placeholder="Contoh Transfer Internal:&#10;Pindahkan kas tunai klinik ke rekening BRI sebesar Rp 500.000&#10;&#10;Contoh Setoran Modal:&#10;Setor modal pemilik ke Kas Tunai Klinik Rp 1.000.000" class="w-full p-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          </div>
+
+          <button onclick="parseWithDeepSeek()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition shadow-sm">
+            <i data-lucide="cpu" class="w-4 h-4"></i> Analisis & Klasifikasi AI Otomatis
+          </button>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="edit-3" class="w-5 h-5 text-emerald-600"></i>
+              <h2 class="font-bold text-slate-800">Formulir Terverifikasi AI</h2>
+            </div>
+            <span id="txBadgeType" class="text-xs px-2.5 py-0.5 rounded font-bold bg-slate-100 text-slate-600">NETRAL</span>
+          </div>
+
+          <form id="txForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Transaksi</label>
+                <input type="date" id="txTanggal" required class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Mutasi</label>
+                <select id="txJenis" onchange="toggleFormFields()" required class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:outline-none">
+                  <option value="MASUK">Penerimaan (Pendapatan / Modal / Kas Transfer)</option>
+                  <option value="KELUAR">Pengeluaran (Beban / Restok / Aset / Kas Transfer)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Subjek / Ringkasan Transaksi</label>
+              <input type="text" id="txSubjek" required placeholder="Contoh: Transfer Kas Tunai ke Bank BRI / Setoran Modal" class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Klasifikasi Akuntansi SAK</label>
+                <select id="txKategori" required class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:outline-none">
+                  <option value="1140 - Transfer Internal / Mutasi Kas">1140 - Transfer Internal / Mutasi Kas (ANTAR KAS/BANK)</option>
+                  <option value="3110 - Modal Pemilik / Injeksi Ekuitas">3110 - Modal Pemilik / Injeksi Ekuitas (EKUITAS)</option>
+                  <option value="4110 - Penjualan Herbal & Produk">4110 - Penjualan Herbal & Produk (BARANG)</option>
+                  <option value="4120 - Potongan & Diskon Penjualan">4120 - Potongan & Diskon Penjualan (KONTRA PENDAPATAN)</option>
+                  <option value="4210 - Layanan TCM & Konsultasi">4210 - Layanan TCM & Konsultasi (JASA)</option>
+                  <option value="1150 - Restok Persediaan Herbal">1150 - Restok Persediaan Herbal (ASET BARANG)</option>
+                  <option value="1160 - Bahan Medis Habis Pakai">1160 - Bahan Medis Habis Pakai (Jarum/Alkohol/Moxa)</option>
+                  <option value="1210 - Pembelian Peralatan Medis">1210 - Pembelian Peralatan Medis (ASET TETAP)</option>
+                  <option value="6110 - Beban Gaji & SDM">6110 - Beban Gaji & SDM</option>
+                  <option value="6120 - Beban Sewa Gedung">6120 - Beban Sewa Gedung</option>
+                  <option value="6130 - Beban Listrik, Air & Internet">6130 - Beban Listrik, Air & Internet</option>
+                  <option value="6140 - Beban Pajak Usaha & Perizinan">6140 - Beban Pajak Usaha & Perizinan</option>
+                  <option value="6160 - Beban Operasional Lainnya">6160 - Beban Operasional Lainnya</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Akun Pembayaran / Sumber Kas</label>
+                <select id="txAkunKas" required class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:outline-none">
+                  <option value="1110 - Kas Tunai Klinik">1110 - Kas Tunai Klinik</option>
+                  <option value="1120 - Bank BRI / Rekening">1120 - Bank BRI / Rekening</option>
+                  <option value="1130 - Kas Kecil Operasional">1130 - Kas Kecil Operasional</option>
+                  <option value="2110 - Hutang Usaha / Supplier">2110 - Hutang Usaha / Supplier (Kredit)</option>
+                  <option value="2120 - Hutang ShopeePay / PayLater">2120 - Hutang ShopeePay / PayLater</option>
+                  <option value="2130 - Hutang Pajak Usaha">2130 - Hutang Pajak Usaha</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="herbalFieldGroup" class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+              <div class="flex justify-between items-center border-b pb-2">
+                <p class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Rincian Item Herbal / Barang</p>
+                <button type="button" onclick="addHerbalRow()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded flex items-center gap-1 transition">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Baris Herbal
+                </button>
+              </div>
+              <div id="herbalRowsContainer" class="space-y-2"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Total Nominal Nota (Rp)</label>
+                <input type="number" id="txNominal" required min="0" value="0" oninput="calcLaba()" class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 font-bold text-slate-800">
+              </div>
+              <div id="fieldHppContainer">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">HPP Otomatis (Rp)</label>
+                <input type="number" id="txHpp" readonly value="0" class="w-full p-2 text-sm border border-slate-200 bg-slate-100 rounded-lg font-semibold text-slate-700">
+              </div>
+              <div id="fieldLabaContainer">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Estimasi Laba Kotor (Rp)</label>
+                <input type="number" id="txLaba" readonly value="0" class="w-full p-2 text-sm border border-slate-200 bg-slate-100 rounded-lg font-bold text-teal-700">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan / Keterangan Tambahan</label>
+              <input type="text" id="txKeterangan" placeholder="Catatan opsional" class="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500">
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition shadow-sm">
+              <i data-lucide="check-circle" class="w-4 h-4"></i> Simpan Transaksi SAK (Auto-Sync)
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PERSEDIAAN HERBAL -->
+    <section id="tab-stok" class="tab-content hidden space-y-6">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            <i data-lucide="boxes" class="w-5 h-5 text-emerald-600"></i> Laporan Aset Persediaan Herbal (Barang)
+          </h2>
+          <p class="text-xs text-slate-500">Pencatatan Aset Lancar Terintegrasi SAK EMKM.</p>
+        </div>
+        <button onclick="openModal('modalAddStok')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i> Tambah Master Herbal Baru
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 font-semibold border-b">
+              <tr>
+                <th class="p-3">Nama Herbal</th>
+                <th class="p-3">Sisa Stok</th>
+                <th class="p-3 text-right">Harga Beli / HPP Unit</th>
+                <th class="p-3 text-right">Total Nilai Aset Stok</th>
+                <th class="p-3 text-center">Status</th>
+                <th class="p-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="stokTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: JURNAL TRANSAKSI -->
+    <section id="tab-jurnal" class="tab-content hidden space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="list" class="w-5 h-5 text-emerald-600"></i> Jurnal Transaksi
+        </h2>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="filterJenis" onchange="renderJurnal()" class="p-2 text-sm border border-slate-300 rounded-lg">
+            <option value="ALL">Semua Mutasi</option>
+            <option value="MASUK">Penerimaan (MASUK)</option>
+            <option value="KELUAR">Pengeluaran (KELUAR)</option>
+          </select>
+          <input type="text" id="searchJurnal" onkeyup="renderJurnal()" placeholder="Cari transaksi..." class="p-2 text-sm border border-slate-300 rounded-lg w-48">
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 font-semibold border-b">
+              <tr>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Jenis</th>
+                <th class="p-3">Subjek Transaksi</th>
+                <th class="p-3">Klasifikasi SAK</th>
+                <th class="p-3 text-right">Nominal</th>
+                <th class="p-3 text-right">HPP</th>
+                <th class="p-3 text-right">Laba Kotor</th>
+                <th class="p-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="jurnalTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: EKSPOR & LAPORAN SPESIFIK -->
+    <section id="tab-laporan" class="tab-content hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center space-x-2 border-b pb-3">
+          <i data-lucide="file-spreadsheets" class="w-5 h-5 text-emerald-600"></i>
+          <h2 class="font-bold text-slate-800">Ekspor Laporan Keuangan SAK EMKM Sesuai Kebutuhan</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <button onclick="openModal('modalExportReport')" class="border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 transition text-center shadow-sm">
+            <i data-lucide="file-text" class="w-6 h-6 text-emerald-700"></i>
+            <span class="font-bold text-sm">Pilih Unduh Laporan (.TXT)</span>
+            <span class="text-xs text-emerald-600">Laba/Rugi, Neraca Kas BRI, Stok, atau Jurnal</span>
+          </button>
+
+          <button onclick="exportToJSON()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 p-4 rounded-xl flex flex-col items-center justify-center gap-2 transition text-center">
+            <i data-lucide="file-json" class="w-6 h-6 text-emerald-600"></i>
+            <span class="font-medium text-sm">Unduh Backup JSON</span>
+            <span class="text-xs text-slate-400">Database lengkap</span>
+          </button>
+
+          <button onclick="exportToCSV()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 p-4 rounded-xl flex flex-col items-center justify-center gap-2 transition text-center">
+            <i data-lucide="table" class="w-6 h-6 text-teal-600"></i>
+            <span class="font-medium text-sm">Ekspor Jurnal CSV</span>
+            <span class="text-xs text-slate-400">Format Excel</span>
+          </button>
+
+          <button onclick="window.print()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 p-4 rounded-xl flex flex-col items-center justify-center gap-2 transition text-center">
+            <i data-lucide="printer" class="w-6 h-6 text-indigo-600"></i>
+            <span class="font-medium text-sm">Cetak Halaman (PDF)</span>
+            <span class="text-xs text-slate-400">Format cetak cepat</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL PILIHAN EKSPOR LAPORAN SPESIFIK -->
+  <div id="modalExportReport" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="download" class="w-5 h-5 text-emerald-600"></i> Pilih Jenis Laporan Yang Diunduh
+        </h3>
+        <button onclick="closeModal('modalExportReport')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <label class="block text-xs font-semibold text-slate-700">Pilih Komponen Laporan Keuangan:</label>
+        
+        <select id="exportReportType" class="w-full p-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
+          <option value="ALL">1. Laporan Ringkasan Komprehensif (Semua Laporan)</option>
+          <option value="LABA_RUGI">2. Laporan Laba Rugi Operasional (Income Statement)</option>
+          <option value="NERACA_KAS">3. Laporan Neraca Kas, Bank BRI & Kewajiban</option>
+          <option value="STOK_HERBAL">4. Laporan Rincian Persediaan Stok Herbal</option>
+          <option value="JURNAL">5. Laporan Jurnal Transaksi LENGKAP</option>
+        </select>
+        <p class="text-xs text-slate-500">File diunduh dalam format .TXT terstruktur & presisi 100% dengan Dashboard.</p>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-3 border-t">
+        <button onclick="closeModal('modalExportReport')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-sm hover:bg-slate-50">Batal</button>
+        <button onclick="processSpecificReportDownload()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5">
+          <i data-lucide="file-check" class="w-4 h-4"></i> Unduh Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN -->
+  <div id="modalSettings" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-emerald-600"></i> Pengaturan API & Cloud
+        </h3>
+        <button onclick="closeModal('modalSettings')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">DeepSeek API Key</label>
+          <input type="password" id="inputDeepSeekKey" placeholder="sk-xxxxxxxxxxxxxxxx" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps Script Web App</label>
+          <input type="text" id="inputGasUrl" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="w-full p-2.5 text-sm border border-slate-300 rounded-lg">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-3 border-t">
+        <button onclick="closeModal('modalSettings')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-sm">Batal</button>
+        <button onclick="saveSettings()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium">Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS STOK & JURNAL -->
+  <div id="modalAddStok" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Master Herbal Baru</h3>
+        <button onclick="closeModal('modalAddStok')" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleAddStokSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Herbal / Item</label>
+          <input type="text" id="newStokNama" required placeholder="Contoh: Ang Co" class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Stok Awal</label>
+            <input type="number" id="newStokQty" required min="0" class="w-full p-2.5 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan</label>
+            <input type="text" id="newStokSatuan" required value="gram" class="w-full p-2.5 text-sm border rounded-lg">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">HPP per Satuan (Rp)</label>
+          <input type="number" id="newStokHpp" required min="0" class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeModal('modalAddStok')" class="px-4 py-2 border rounded-lg text-sm">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalEditStok" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Perbaikan Master Stok Herbal</h3>
+        <button onclick="closeModal('modalEditStok')" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleEditStokSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editStokId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Herbal</label>
+          <input type="text" id="editStokNama" required class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Stok Saat Ini</label>
+            <input type="number" id="editStokQty" required step="any" class="w-full p-2.5 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan</label>
+            <input type="text" id="editStokSatuan" required class="w-full p-2.5 text-sm border rounded-lg">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">HPP per Satuan (Rp)</label>
+          <input type="number" id="editStokHpp" required step="any" class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeModal('modalEditStok')" class="px-4 py-2 border rounded-lg text-sm">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalViewTx" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Detail Transaksi Jurnal</h3>
+        <button onclick="closeModal('modalViewTx')" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="viewTxContent" class="space-y-3 text-sm text-slate-700"></div>
+      <div class="flex justify-end pt-3 border-t">
+        <button onclick="closeModal('modalViewTx')" class="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEditTx" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Edit Transaksi Jurnal</h3>
+        <button onclick="closeModal('modalEditTx')" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleEditTxSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editTxId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal</label>
+            <input type="date" id="editTxTanggal" required class="w-full p-2.5 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Mutasi</label>
+            <select id="editTxJenis" required class="w-full p-2.5 text-sm border rounded-lg">
+              <option value="MASUK">Penerimaan (MASUK)</option>
+              <option value="KELUAR">Pengeluaran (KELUAR)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Subjek Transaksi</label>
+          <input type="text" id="editTxSubjek" required class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Klasifikasi SAK</label>
+            <select id="editTxKategori" required class="w-full p-2.5 text-sm border rounded-lg">
+              <option value="1140 - Transfer Internal / Mutasi Kas">1140 - Transfer Internal / Mutasi Kas</option>
+              <option value="3110 - Modal Pemilik / Injeksi Ekuitas">3110 - Modal Pemilik / Injeksi Ekuitas</option>
+              <option value="4110 - Penjualan Herbal & Produk">4110 - Penjualan Herbal & Produk</option>
+              <option value="4120 - Potongan & Diskon Penjualan">4120 - Potongan & Diskon Penjualan</option>
+              <option value="4210 - Layanan TCM & Konsultasi">4210 - Layanan TCM & Konsultasi</option>
+              <option value="1150 - Restok Persediaan Herbal">1150 - Restok Persediaan Herbal</option>
+              <option value="1160 - Bahan Medis Habis Pakai">1160 - Bahan Medis Habis Pakai</option>
+              <option value="1210 - Pembelian Peralatan Medis">1210 - Pembelian Peralatan Medis</option>
+              <option value="6110 - Beban Gaji & SDM">6110 - Beban Gaji & SDM</option>
+              <option value="6120 - Beban Sewa Gedung">6120 - Beban Sewa Gedung</option>
+              <option value="6130 - Beban Listrik, Air & Internet">6130 - Beban Listrik, Air & Internet</option>
+              <option value="6140 - Beban Pajak Usaha & Perizinan">6140 - Beban Pajak Usaha & Perizinan</option>
+              <option value="6160 - Beban Operasional Lainnya">6160 - Beban Operasional Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Akun Pembayaran</label>
+            <select id="editTxAkunKas" required class="w-full p-2.5 text-sm border rounded-lg">
+              <option value="1110 - Kas Tunai Klinik">1110 - Kas Tunai Klinik</option>
+              <option value="1120 - Bank BRI / Rekening">1120 - Bank BRI / Rekening</option>
+              <option value="1130 - Kas Kecil Operasional">1130 - Kas Kecil Operasional</option>
+              <option value="2110 - Hutang Usaha / Supplier">2110 - Hutang Usaha / Supplier</option>
+              <option value="2120 - Hutang ShopeePay / PayLater">2120 - Hutang ShopeePay / PayLater</option>
+              <option value="2130 - Hutang Pajak Usaha">2130 - Hutang Pajak Usaha</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nominal (Rp)</label>
+          <input type="number" id="editTxNominal" required min="0" class="w-full p-2.5 text-sm border rounded-lg font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan</label>
+          <input type="text" id="editTxKeterangan" class="w-full p-2.5 text-sm border rounded-lg">
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeModal('modalEditTx')" class="px-4 py-2 border rounded-lg text-sm">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+    <p>&copy; 2026 Klinik Rumah Sehat Insani (RSI) Padang. Standar Akuntansi SAK EMKM Terintegrasi.</p>
+  </footer>
+
+  <!-- CORE LOGIC AKUNTANSI CERDAS & PRESISI -->
+  <script>
+    let transactions = [];
+    let inventory = [];
+    let config = { deepseekApiKey: "", gasUrl: "" };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      loadConfig();
+      loadLocalState();
+      setFormTodayDate();
+      renderAll();
+      resetHerbalRows();
+    });
+
+    function loadConfig() {
+      config.deepseekApiKey = localStorage.getItem("RSI_DEEPSEEK_KEY") || "";
+      config.gasUrl = localStorage.getItem("RSI_GAS_URL") || "";
+
+      document.getElementById("inputDeepSeekKey").value = config.deepseekApiKey;
+      document.getElementById("inputGasUrl").value = config.gasUrl;
+    }
+
+    function saveSettings() {
+      config.deepseekApiKey = document.getElementById("inputDeepSeekKey").value.trim();
+      config.gasUrl = document.getElementById("inputGasUrl").value.trim();
+
+      localStorage.setItem("RSI_DEEPSEEK_KEY", config.deepseekApiKey);
+      localStorage.setItem("RSI_GAS_URL", config.gasUrl);
+
+      closeModal("modalSettings");
+      showStatus("Pengaturan API & Cloud berhasil disimpan!", "success");
+    }
+
+    function loadLocalState() {
+      const savedTx = localStorage.getItem("RSI_TRANSACTIONS_DATA");
+      transactions = savedTx ? JSON.parse(savedTx) : [];
+
+      const savedInv = localStorage.getItem("RSI_INVENTORY_DATA");
+      inventory = savedInv ? JSON.parse(savedInv) : [];
+    }
+
+    function saveLocalState() {
+      localStorage.setItem("RSI_TRANSACTIONS_DATA", JSON.stringify(transactions));
+      localStorage.setItem("RSI_INVENTORY_DATA", JSON.stringify(inventory));
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("border-emerald-400", "text-white");
+        btn.classList.add("border-transparent");
+      });
+
+      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      activeBtn.classList.add("border-emerald-400", "text-white");
+      activeBtn.classList.remove("border-transparent");
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove("hidden"); }
+    function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+
+    function setFormTodayDate() {
+      document.getElementById("txTanggal").value = new Date().toISOString().split('T')[0];
+    }
+
+    function resetHerbalRows() {
+      const container = document.getElementById("herbalRowsContainer");
+      container.innerHTML = "";
+      addHerbalRow();
+    }
+
+    function addHerbalRow(nama = "", qty = 0, harga = 0) {
+      const container = document.getElementById("herbalRowsContainer");
+      const rowId = "hRow_" + Date.now() + "_" + Math.floor(Math.random()*1000);
+
+      const div = document.createElement("div");
+      div.id = rowId;
+      div.className = "herbal-item-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded border border-slate-200 shadow-sm";
+      div.innerHTML = `
+        <div class="col-span-5">
+          <input type="text" placeholder="Nama Herbal/Barang" value="${nama}" oninput="autoFetchHpp()" class="row-nama w-full p-1.5 text-xs border rounded focus:outline-none">
+        </div>
+        <div class="col-span-3">
+          <input type="number" placeholder="Qty (Gram)" min="0" value="${qty}" oninput="autoFetchHpp()" class="row-qty w-full p-1.5 text-xs border rounded focus:outline-none">
+        </div>
+        <div class="col-span-3">
+          <input type="number" placeholder="Rp Total Item" min="0" value="${harga}" oninput="calcTotalsFromRows()" class="row-harga w-full p-1.5 text-xs border rounded focus:outline-none">
+        </div>
+        <div class="col-span-1 text-center">
+          <button type="button" onclick="removeHerbalRow('${rowId}')" class="text-rose-500 hover:text-rose-700 p-1">
+            <i data-lucide="x-circle" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `;
+      container.appendChild(div);
+      lucide.createIcons();
+      autoFetchHpp();
+    }
+
+    function removeHerbalRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) el.remove();
+      autoFetchHpp();
+    }
+
+    function getHerbalItemsFromForm() {
+      const rows = document.querySelectorAll(".herbal-item-row");
+      const items = [];
+      rows.forEach(r => {
+        const nama = r.querySelector(".row-nama").value.trim();
+        const qty = parseFloat(r.querySelector(".row-qty").value) || 0;
+        const harga = parseFloat(r.querySelector(".row-harga").value) || 0;
+        if (nama !== "") {
+          items.push({ nama, qty, harga });
+        }
+      });
+      return items;
+    }
+
+    function calcTotalsFromRows() {
+      const items = getHerbalItemsFromForm();
+      const jenis = document.getElementById("txJenis").value;
+      
+      if (jenis === "KELUAR" && items.length > 0) {
+        let sumHarga = items.reduce((acc, curr) => acc + curr.harga, 0);
+        if (sumHarga > 0) {
+          document.getElementById("txNominal").value = sumHarga;
+        }
+      }
+      autoFetchHpp();
+    }
+
+    function toggleFormFields() {
+      const jenis = document.getElementById("txJenis").value;
+      const hppContainer = document.getElementById("fieldHppContainer");
+      const labaContainer = document.getElementById("fieldLabaContainer");
+      const badge = document.getElementById("txBadgeType");
+
+      if (jenis === "MASUK") {
+        hppContainer.classList.remove("hidden");
+        labaContainer.classList.remove("hidden");
+        badge.innerText = "PENERIMAAN";
+        badge.className = "text-xs px-2.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800";
+      } else {
+        hppContainer.classList.add("hidden");
+        labaContainer.classList.add("hidden");
+        badge.innerText = "PENGELUARAN";
+        badge.className = "text-xs px-2.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800";
+      }
+      autoFetchHpp();
+    }
+
+    function autoFetchHpp() {
+      const jenis = document.getElementById("txJenis").value;
+      const items = getHerbalItemsFromForm();
+      let totalHppCalculated = 0;
+
+      if (jenis === "MASUK" && items.length > 0) {
+        items.forEach(it => {
+          const matched = inventory.find(i => i.nama.toLowerCase() === it.nama.toLowerCase());
+          if (matched) {
+            totalHppCalculated += (matched.hppUnit * it.qty);
+          }
+        });
+        document.getElementById("txHpp").value = totalHppCalculated;
+      } else {
+        document.getElementById("txHpp").value = 0;
+      }
+      calcLaba();
+    }
+
+    function calcLaba() {
+      const nominal = parseFloat(document.getElementById("txNominal").value) || 0;
+      const hpp = parseFloat(document.getElementById("txHpp").value) || 0;
+      const jenis = document.getElementById("txJenis").value;
+      const kat = document.getElementById("txKategori").value;
+
+      if (kat.includes("3110") || kat.includes("1140") || kat.toLowerCase().includes("modal") || kat.toLowerCase().includes("transfer")) {
+        document.getElementById("txLaba").value = 0;
+      } else {
+        document.getElementById("txLaba").value = (jenis === "MASUK") ? (nominal - hpp) : 0;
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      let jenis = document.getElementById("txJenis").value;
+      const subjek = document.getElementById("txSubjek").value;
+      let kategori = document.getElementById("txKategori").value;
+      const akunKas = document.getElementById("txAkunKas").value;
+      const nominal = parseFloat(document.getElementById("txNominal").value) || 0;
+      const items = getHerbalItemsFromForm();
+      const tgl = document.getElementById("txTanggal").value;
+      const ket = document.getElementById("txKeterangan").value;
+
+      const txtLower = (subjek + " " + ket).toLowerCase();
+      const isPurchaseKeyword = txtLower.includes("beli") || txtLower.includes("restok") || txtLower.includes("pembelian") || txtLower.includes("kulakan");
+
+      if (isPurchaseKeyword || (jenis === "KELUAR" && (items.length > 0 || kategori.includes("1150")))) {
+        jenis = "KELUAR";
+        kategori = "1150 - Restok Persediaan Herbal";
+      }
+
+      const isRestok = (jenis === "KELUAR") && (kategori.includes("1150"));
+      const isModal = kategori.includes("3110") || txtLower.includes("modal");
+      const isTransfer = kategori.includes("1140") || txtLower.includes("transfer") || txtLower.includes("mutasi") || txtLower.includes("pindah");
+
+      if (jenis === "MASUK" && items.length > 0 && !isModal && !isTransfer) {
+        for (let it of items) {
+          const itemInInv = inventory.find(i => i.nama.toLowerCase() === it.nama.toLowerCase());
+          if (!itemInInv) {
+            showStatus(`TRANSAKSI BATAL: Herbal '${it.nama}' belum ada di Master Stok!`, "error");
+            return;
+          }
+          if (itemInInv.qty < it.qty) {
+            showStatus(`TRANSAKSI BATAL: Stok '${it.nama}' tidak cukup! (Sisa: ${itemInInv.qty} ${itemInInv.satuan}).`, "error");
+            return;
+          }
+        }
+        items.forEach(it => {
+          const itemInInv = inventory.find(i => i.nama.toLowerCase() === it.nama.toLowerCase());
+          itemInInv.qty -= it.qty;
+        });
+      } 
+      else if (isRestok && items.length > 0) {
+        items.forEach(it => {
+          const idx = inventory.findIndex(i => i.nama.toLowerCase() === it.nama.toLowerCase());
+          const itemHargaNominal = it.harga > 0 ? it.harga : (nominal / items.length);
+
+          if (idx !== -1) {
+            const totalValBefore = inventory[idx].qty * inventory[idx].hppUnit;
+            inventory[idx].qty += it.qty;
+            inventory[idx].hppUnit = (totalValBefore + itemHargaNominal) / inventory[idx].qty;
+          } else {
+            inventory.push({
+              id: "STK-" + Date.now() + "_" + Math.floor(Math.random()*100),
+              nama: it.nama,
+              qty: it.qty,
+              satuan: "gram",
+              hppUnit: it.qty > 0 ? (itemHargaNominal / it.qty) : 0
+            });
+          }
+        });
+      }
+
+      const finalHpp = parseFloat(document.getElementById("txHpp").value) || 0;
+
+      // TRANSAKSI UTAMA
+      const newTx = {
+        id: "TX-" + Date.now(),
+        tanggal: tgl,
+        jenis: jenis,
+        subjek: subjek,
+        kategori: kategori,
+        akunKas: akunKas,
+        itemsDetail: items,
+        herbalNama: items.map(i=>i.nama).join(", "),
+        herbalQty: items.reduce((acc, c)=>acc+c.qty, 0),
+        nominal: nominal,
+        hpp: (isModal || isTransfer) ? 0 : finalHpp,
+        laba: (jenis === "MASUK" && !isModal && !isTransfer) ? (nominal - finalHpp) : 0,
+        keterangan: ket
+      };
+
+      transactions.unshift(newTx);
+
+      // AUTOMATIC DOUBLE ENTRY UNTUK TRANSFER INTERNAL / MUTASI KAS (1140)
+      if (isTransfer) {
+        let pairedAkun = "1120 - Bank BRI / Rekening";
+        let pairedJenis = (jenis === "KELUAR") ? "MASUK" : "KELUAR";
+
+        if (akunKas.includes("1120") || akunKas.toLowerCase().includes("bri")) {
+          pairedAkun = "1110 - Kas Tunai Klinik";
+        }
+
+        const pairedTx = {
+          id: "TX-" + (Date.now() + 1),
+          tanggal: tgl,
+          jenis: pairedJenis,
+          subjek: `[Oto-Pasangan] ${subjek}`,
+          kategori: "1140 - Transfer Internal / Mutasi Kas",
+          akunKas: pairedAkun,
+          itemsDetail: [],
+          herbalNama: "",
+          herbalQty: 0,
+          nominal: nominal,
+          hpp: 0,
+          laba: 0,
+          keterangan: `Pasangan otomatis mutasi kas dari ID: ${newTx.id}`
+        };
+        transactions.unshift(pairedTx);
+      }
+
+      saveLocalState();
+      renderAll();
+      autoSyncCloudBackground();
+
+      document.getElementById("txForm").reset();
+      setFormTodayDate();
+      resetHerbalRows();
+
+      showStatus("Transaksi SAK EMKM terverifikasi & berhasil disimpan!", "success");
+      switchTab("jurnal");
+    }
+
+    function handleAddStokSubmit(e) {
+      e.preventDefault();
+      const nama = document.getElementById("newStokNama").value.trim();
+      const qty = parseFloat(document.getElementById("newStokQty").value) || 0;
+      const satuan = document.getElementById("newStokSatuan").value.trim() || "gram";
+      const hppUnit = parseFloat(document.getElementById("newStokHpp").value) || 0;
+
+      const idx = inventory.findIndex(i => i.nama.toLowerCase() === nama.toLowerCase());
+      if (idx !== -1) {
+        inventory[idx].qty += qty;
+        inventory[idx].hppUnit = hppUnit;
+      } else {
+        inventory.push({ id: "STK-" + Date.now(), nama, qty, satuan, hppUnit });
+      }
+
+      saveLocalState();
+      renderAll();
+      autoSyncCloudBackground();
+      closeModal("modalAddStok");
+      showStatus("Master persediaan diperbarui!", "success");
+    }
+
+    function editStok(id) {
+      const item = inventory.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById("editStokId").value = item.id;
+      document.getElementById("editStokNama").value = item.nama;
+      document.getElementById("editStokQty").value = item.qty;
+      document.getElementById("editStokSatuan").value = item.satuan;
+      document.getElementById("editStokHpp").value = item.hppUnit;
+
+      openModal("modalEditStok");
+    }
+
+    function handleEditStokSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById("editStokId").value;
+      const nama = document.getElementById("editStokNama").value.trim();
+      const qty = parseFloat(document.getElementById("editStokQty").value) || 0;
+      const satuan = document.getElementById("editStokSatuan").value.trim() || "gram";
+      const hppUnit = parseFloat(document.getElementById("editStokHpp").value) || 0;
+
+      const idx = inventory.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        inventory[idx].nama = nama;
+        inventory[idx].qty = qty;
+        inventory[idx].satuan = satuan;
+        inventory[idx].hppUnit = hppUnit;
+
+        saveLocalState();
+        renderAll();
+        autoSyncCloudBackground();
+        closeModal("modalEditStok");
+        showStatus("Master stok berhasil diperbaiki!", "success");
+      }
+    }
+
+    function deleteStok(id) {
+      if (confirm("Hapus item herbal ini dari persediaan?")) {
+        inventory = inventory.filter(i => i.id !== id);
+        saveLocalState();
+        renderAll();
+        autoSyncCloudBackground();
+        showStatus("Master stok dihapus.", "info");
+      }
+    }
+
+    function viewTx(id) {
+      const t = transactions.find(tx => tx.id === id);
+      if (!t) return;
+
+      let itemsHtml = "";
+      if (t.itemsDetail && t.itemsDetail.length > 0) {
+        itemsHtml = `<div class="p-3 bg-slate-50 rounded border space-y-1 my-2">
+          <p class="font-bold text-xs text-slate-500 uppercase">Rincian Item Herbal:</p>`;
+        t.itemsDetail.forEach((it, idx) => {
+          itemsHtml += `<p class="text-xs"><strong>${idx+1}. ${it.nama}</strong>: ${it.qty} gram - ${formatRp(it.harga)}</p>`;
+        });
+        itemsHtml += `</div>`;
+      }
+
+      document.getElementById("viewTxContent").innerHTML = `
+        <div class="grid grid-cols-2 gap-2 border-b pb-2">
+          <div><span class="text-xs text-slate-400 block">ID Transaksi</span><strong>${t.id}</strong></div>
+          <div><span class="text-xs text-slate-400 block">Tanggal</span><strong>${t.tanggal}</strong></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 border-b pb-2">
+          <div><span class="text-xs text-slate-400 block">Jenis Mutasi</span><span class="font-bold ${t.jenis==='MASUK'?'text-emerald-600':'text-rose-600'}">${t.jenis}</span></div>
+          <div><span class="text-xs text-slate-400 block">Klasifikasi SAK</span><strong>${t.kategori||'-'}</strong></div>
+        </div>
+        <div class="border-b pb-2">
+          <span class="text-xs text-slate-400 block">Subjek Transaksi</span><strong>${t.subjek}</strong>
+        </div>
+        ${itemsHtml}
+        <div class="grid grid-cols-3 gap-2 border-b pb-2">
+          <div><span class="text-xs text-slate-400 block">Total Nominal</span><strong class="text-base">${formatRp(t.nominal)}</strong></div>
+          <div><span class="text-xs text-slate-400 block">HPP</span><strong>${formatRp(t.hpp)}</strong></div>
+          <div><span class="text-xs text-slate-400 block">Laba Kotor</span><strong class="text-teal-700">${formatRp(t.laba)}</strong></div>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 block">Metode Pembayaran & Keterangan</span>
+          <p><strong>${t.akunKas||'-'}</strong> - <em>${t.keterangan||'Tanpa catatan'}</em></p>
+        </div>
+      `;
+
+      openModal("modalViewTx");
+    }
+
+    function editTx(id) {
+      const t = transactions.find(tx => tx.id === id);
+      if (!t) return;
+
+      document.getElementById("editTxId").value = t.id;
+      document.getElementById("editTxTanggal").value = t.tanggal;
+      document.getElementById("editTxJenis").value = t.jenis;
+      document.getElementById("editTxSubjek").value = t.subjek;
+      document.getElementById("editTxKategori").value = t.kategori || "1150 - Restok Persediaan Herbal";
+      document.getElementById("editTxAkunKas").value = t.akunKas || "1110 - Kas Tunai Klinik";
+      document.getElementById("editTxNominal").value = t.nominal;
+      document.getElementById("editTxKeterangan").value = t.keterangan || "";
+
+      openModal("modalEditTx");
+    }
+
+    function handleEditTxSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById("editTxId").value;
+      const idx = transactions.findIndex(t => t.id === id);
+
+      if (idx !== -1) {
+        transactions[idx].tanggal = document.getElementById("editTxTanggal").value;
+        transactions[idx].jenis = document.getElementById("editTxJenis").value;
+        transactions[idx].subjek = document.getElementById("editTxSubjek").value;
+        transactions[idx].kategori = document.getElementById("editTxKategori").value;
+        transactions[idx].akunKas = document.getElementById("editTxAkunKas").value;
+        transactions[idx].nominal = parseFloat(document.getElementById("editTxNominal").value) || 0;
+        transactions[idx].keterangan = document.getElementById("editTxKeterangan").value;
+
+        const kat = (transactions[idx].kategori || "").toLowerCase();
+        const isModal = kat.includes("3110") || kat.includes("modal");
+        const isTransfer = kat.includes("1140") || kat.includes("transfer") || kat.includes("mutasi");
+
+        if (transactions[idx].jenis === "MASUK" && !isModal && !isTransfer) {
+          transactions[idx].laba = transactions[idx].nominal - (transactions[idx].hpp || 0);
+        } else {
+          transactions[idx].laba = 0;
+        }
+
+        saveLocalState();
+        renderAll();
+        autoSyncCloudBackground();
+        closeModal("modalEditTx");
+        showStatus("Transaksi berhasil diperbarui!", "success");
+      }
+    }
+
+    function deleteTx(id) {
+      const targetTx = transactions.find(t => t.id === id);
+      if (!targetTx) return;
+
+      if (confirm(`Hapus transaksi '${targetTx.subjek}'? Stok persediaan akan otomatis dikembalikan/disesuaikan.`)) {
+        const isRestok = (targetTx.jenis === "KELUAR") && ((targetTx.kategori||"").includes("1150") || (targetTx.herbalNama && targetTx.herbalNama.trim() !== ""));
+
+        if (targetTx.itemsDetail && Array.isArray(targetTx.itemsDetail) && targetTx.itemsDetail.length > 0) {
+          targetTx.itemsDetail.forEach(it => {
+            const idx = inventory.findIndex(i => i.nama.toLowerCase() === it.nama.toLowerCase());
+            if (idx !== -1) {
+              if (isRestok) {
+                inventory[idx].qty = Math.max(0, inventory[idx].qty - it.qty);
+              } else if (targetTx.jenis === "MASUK") {
+                inventory[idx].qty += it.qty;
+              }
+            }
+          });
+        }
+
+        transactions = transactions.filter(t => t.id !== id);
+        saveLocalState();
+        renderAll();
+        autoSyncCloudBackground();
+        showStatus("Transaksi dihapus dan stok disesuaikan!", "info");
+      }
+    }
+
+    function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      document.getElementById("fileNameDisplay").innerText = file.name;
+      document.getElementById("aiRawInput").value = `[STRUK SCAN ${file.name}]: Uraikan rincian transaksi ini ke akun SAK EMKM.`;
+    }
+
+    async function parseWithDeepSeek() {
+      const rawText = document.getElementById("aiRawInput").value.trim();
+      if (!rawText) {
+        alert("Masukkan teks transaksi terlebih dahulu!");
+        return;
+      }
+      if (!config.deepseekApiKey) {
+        alert("Setel DeepSeek API Key di Pengaturan!");
+        openModal("modalSettings");
+        return;
+      }
+
+      showStatus("AI Adaptive sedang menguraikan nota ke standar SAK...", "info");
+
+      const prompt = `Anda adalah Senior Parser Akuntansi Klinik SAK EMKM Padang.
+Tugas Anda adalah menguraikan nota/teks transaksi barang, jasa, diskon, pajak, modal, maupun transfer antar kas/bank.
+
+DAFTAR AKUN STANDAR KELAS MENENGAH:
+- "1140 - Transfer Internal / Mutasi Kas" (PILIH INI jika pemindahan uang antar kas/bank, misal dari kas tunai ke rekening BRI)
+- "3110 - Modal Pemilik / Injeksi Ekuitas" (PILIH INI jika setoran modal / injeksi dana pribadi)
+- "4110 - Penjualan Herbal & Produk" (Penjualan barang/herbal)
+- "4120 - Potongan & Diskon Penjualan" (Diskon/potongan harga)
+- "4210 - Layanan TCM & Konsultasi" (Jasa terapi/medis)
+- "1150 - Restok Persediaan Herbal" (Beli/restok persediaan)
+- "1160 - Bahan Medis Habis Pakai" (Beli jarum, moxa, alkohol, sarung tangan)
+- "1210 - Pembelian Peralatan Medis" (Beli peralatan/meja periksa)
+- "6110 - Beban Gaji & SDM"
+- "6120 - Beban Sewa Gedung"
+- "6130 - Beban Listrik, Air & Internet"
+- "6140 - Beban Pajak Usaha & Perizinan" (Pajak/PBB/retribusi)
+- "6160 - Beban Operasional Lainnya"
+
+DAFTAR AKUN KAS / KEWAJIBAN:
+- "1110 - Kas Tunai Klinik"
+- "1120 - Bank BRI / Rekening"
+- "1130 - Kas Kecil Operasional"
+- "2110 - Hutang Usaha / Supplier"
+- "2120 - Hutang ShopeePay / PayLater"
+- "2130 - Hutang Pajak Usaha"
+
+FORMAT JSON OUTPUT WAJIB (MURNI TANPA MARKDOWN ATAU KATA LAIN):
+{
+  "tanggal": "YYYY-MM-DD",
+  "jenis": "MASUK atau KELUAR",
+  "subjek": "Ringkasan Transaksi",
+  "kategori": "Pilih persis dari daftar akun SAK di atas",
+  "akunKas": "Pilih persis dari daftar akun kas di atas",
+  "items": [
+    { "nama": "Nama Herbal/Barang", "qty": qty_gram, "harga": total_harga_item }
+  ],
+  "nominalTotal": total_rupiah,
+  "keterangan": "catatan opsional"
+}
+
+Teks Nota:
+"${rawText}"`;
+
+      try {
+        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${config.deepseekApiKey}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1
+          })
+        });
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+          let rawContent = data.choices[0].message.content.trim();
+          const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) throw new Error("Format AI tidak dapat dibaca sebagai JSON.");
+
+          const parsed = JSON.parse(jsonMatch[0]);
+
+          if (parsed.tanggal) document.getElementById("txTanggal").value = parsed.tanggal;
+          if (parsed.jenis) document.getElementById("txJenis").value = parsed.jenis;
+          if (parsed.subjek) document.getElementById("txSubjek").value = parsed.subjek;
+          if (parsed.kategori) document.getElementById("txKategori").value = parsed.kategori;
+          if (parsed.akunKas) document.getElementById("txAkunKas").value = parsed.akunKas;
+          if (parsed.keterangan) document.getElementById("txKeterangan").value = parsed.keterangan;
+
+          const container = document.getElementById("herbalRowsContainer");
+          container.innerHTML = "";
+
+          if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
+            parsed.items.forEach(it => {
+              addHerbalRow(it.nama || "", it.qty || 0, it.harga || 0);
+            });
+          } else {
+            addHerbalRow();
+          }
+
+          if (parsed.nominalTotal !== undefined && parsed.nominalTotal > 0) {
+            document.getElementById("txNominal").value = parsed.nominalTotal;
+          } else {
+            calcTotalsFromRows();
+          }
+
+          toggleFormFields();
+          showStatus("AI SAK EMKM Berhasil menguraikan nota! Silakan simpan transaksi.", "success");
+        }
+      } catch (err) {
+        showStatus("Gagal diproses AI: " + err.message, "error");
+      }
+    }
+
+    async function sendAiConsultation() {
+      const inputEl = document.getElementById("aiChatInput");
+      const userMsg = inputEl.value.trim();
+      if (!userMsg) return;
+
+      if (!config.deepseekApiKey) {
+        alert("Setel API Key DeepSeek terlebih dahulu!");
+        openModal("modalSettings");
+        return;
+      }
+
+      const chatBox = document.getElementById("advisorChatHistory");
+      chatBox.innerHTML += `
+        <div class="bg-slate-100 p-3 rounded-lg text-xs text-slate-800 ml-6 border border-slate-200">
+          <strong>Anda (Coach Aldi):</strong> ${userMsg}
+        </div>
+      `;
+      inputEl.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const systemPrompt = `Anda adalah Senior Chartered Accountant SAK EMKM & Systems Architect Klinik RSI Padang.
+Data Keuangan Saat Ini:
+- Jurnal: ${JSON.stringify(transactions)}
+- Persediaan Stok: ${JSON.stringify(inventory)}`;
+
+      try {
+        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${config.deepseekApiKey}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userMsg }
+            ],
+            temperature: 0.3
+          })
+        });
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+          chatBox.innerHTML += `
+            <div class="bg-emerald-50 p-3 rounded-lg text-xs text-slate-800 mr-6 border border-emerald-200 whitespace-pre-wrap">
+              <strong>AI Advisor:</strong>\n${data.choices[0].message.content}
+            </div>
+          `;
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      } catch (err) {
+        chatBox.innerHTML += `<div class="bg-rose-50 p-2 text-xs text-rose-700">Error: ${err.message}</div>`;
+      }
+    }
+
+    async function runDeepSeekAdvisor() {
+      document.getElementById("aiChatInput").value = "Analisis Laba Rugi SAK EMKM Barang & Jasa Klinik RSI saat ini.";
+      sendAiConsultation();
+    }
+
+    async function autoSyncCloudBackground() {
+      if (!config.gasUrl) return;
+
+      try {
+        const payload = new URLSearchParams();
+        payload.append("action", "save");
+        payload.append("data", JSON.stringify({ transactions, inventory }));
+
+        await fetch(config.gasUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: payload
+        });
+      } catch (err) {
+        console.error("Auto-sync background error:", err);
+      }
+    }
+
+    // LOGIKA PERHITUNGAN AKUNTANSI CERDAS & PRESISI (100% SINKRON)
+    function calculateFinancialData() {
+      let totalPenjualanHerbal = 0;
+      let totalPotonganDiskon = 0;
+      let totalLayananTcm = 0;
+      let totalHppHerbal = 0;
+      let totalModalPemilik = 0;
+
+      let bebanBeban = {
+        "6110 - Beban Gaji & SDM": 0,
+        "6120 - Beban Sewa Gedung": 0,
+        "6130 - Beban Listrik, Air & Internet": 0,
+        "6140 - Beban Pajak Usaha & Perizinan": 0,
+        "1160 - Bahan Medis Habis Pakai": 0,
+        "6160 - Beban Operasional Lainnya": 0
+      };
+
+      let kasTunai = 0;
+      let kasBank = 0;
+      let kasKecil = 0;
+      let hutangTotal = 0;
+
+      transactions.forEach(t => {
+        const nominal = t.nominal || 0;
+        const net = t.jenis === "MASUK" ? nominal : -nominal;
+
+        const ak = (t.akunKas || "").toLowerCase();
+        const subj = (t.subjek || "").toLowerCase();
+        const kat = (t.kategori || "").toLowerCase();
+
+        // LOGIKA REKONSILIASI KAS & BANK SMART MATCHING
+        if (ak.includes("1110") || ak.includes("tunai")) {
+          kasTunai += net;
+
+          // JIKA TRANSAKSI LAMA BELUM MEMILIKI PASANGAN OTOMATIS:
+          // Apabila Uang Keluar dari Tunai dengan maksud Pindah ke BRI
+          if (t.jenis === "KELUAR" && (subj.includes("bri") || subj.includes("pindah") || subj.includes("rekening") || kat.includes("1140"))) {
+            // Pasangan implicit: Tambah Kas Bank BRI
+            const hasExplicitPair = transactions.some(other => other.id !== t.id && (other.akunKas||"").toLowerCase().includes("1120") && other.nominal === nominal);
+            if (!hasExplicitPair) {
+              kasBank += nominal;
+            }
+          }
+        } 
+        else if (ak.includes("1120") || ak.includes("bri") || ak.includes("bca") || ak.includes("rekening")) {
+          kasBank += net;
+        } 
+        else if (ak.includes("1130") || ak.includes("kecil")) {
+          kasKecil += net;
+        } 
+        else if (ak.includes("2110") || ak.includes("2120") || ak.includes("2130") || ak.includes("hutang") || ak.includes("shopeepay") || ak.includes("kredit")) {
+          hutangTotal += nominal;
+        }
+
+        // PENANGANAN MUTASI KAS / TRANSFER INTERNAL (1140)
+        if (kat.includes("1140") || kat.includes("transfer") || kat.includes("mutasi")) {
+          return; // Abaikan dari Laba Rugi Operasional
+        }
+
+        // PENANGANAN KHUSUS EKUITAS / MODAL (3110)
+        if (kat.includes("3110") || kat.includes("modal")) {
+          if (t.jenis === "MASUK") {
+            totalModalPemilik += nominal;
+          }
+          return; // Abaikan dari Laba Rugi Operasional
+        }
+
+        // PENDAPATAN OPERASIONAL
+        if (t.jenis === "MASUK") {
+          if (kat.includes("4120") || kat.includes("diskon") || kat.includes("potongan")) {
+            totalPotonganDiskon += nominal;
+          } else if (kat.includes("4210") || kat.includes("layanan") || kat.includes("tcm") || kat.includes("konsultasi")) {
+            totalLayananTcm += nominal;
+          } else {
+            totalPenjualanHerbal += nominal;
+            totalHppHerbal += (t.hpp || 0);
+          }
+        } 
+        // BEBAN OPERASIONAL
+        else if (t.jenis === "KELUAR") {
+          const isRestok = kat.includes("1150") || (t.herbalNama && t.herbalNama.trim() !== "");
+
+          if (!isRestok) {
+            if (kat.includes("6110") || kat.includes("gaji")) {
+              bebanBeban["6110 - Beban Gaji & SDM"] += nominal;
+            } else if (kat.includes("6120") || kat.includes("sewa")) {
+              bebanBeban["6120 - Beban Sewa Gedung"] += nominal;
+            } else if (kat.includes("6130") || kat.includes("listrik")) {
+              bebanBeban["6130 - Beban Listrik, Air & Internet"] += nominal;
+            } else if (kat.includes("6140") || kat.includes("pajak")) {
+              bebanBeban["6140 - Beban Pajak Usaha & Perizinan"] += nominal;
+            } else if (kat.includes("1160") || kat.includes("medis")) {
+              bebanBeban["1160 - Bahan Medis Habis Pakai"] += nominal;
+            } else {
+              bebanBeban["6160 - Beban Operasional Lainnya"] += nominal;
+            }
+          }
+        }
+      });
+
+      const totalPendapatanKotor = (totalPenjualanHerbal - totalPotonganDiskon) + totalLayananTcm;
+      const labaKotor = totalPendapatanKotor - totalHppHerbal;
+      const totalBebanOperasional = Object.values(bebanBeban).reduce((a, b) => a + b, 0);
+      const labaBersihAkhir = labaKotor - totalBebanOperasional;
+      const nilaiAsetStok = inventory.reduce((acc, curr) => acc + (curr.qty * curr.hppUnit), 0);
+
+      return {
+        totalPenjualanHerbal,
+        totalPotonganDiskon,
+        totalLayananTcm,
+        totalPendapatanKotor,
+        totalHppHerbal,
+        labaKotor,
+        bebanBeban,
+        totalBebanOperasional,
+        labaBersihAkhir,
+        totalModalPemilik,
+        kasTunai,
+        kasBank,
+        kasKecil,
+        hutangTotal,
+        nilaiAsetStok
+      };
+    }
+
+    function renderDashboard() {
+      const calc = calculateFinancialData();
+
+      document.getElementById("dashTotalMasuk").innerText = formatRp(calc.totalPendapatanKotor);
+      document.getElementById("dashTotalKeluar").innerText = formatRp(calc.totalBebanOperasional + calc.totalHppHerbal);
+      document.getElementById("dashLabaBersih").innerText = formatRp(calc.labaBersihAkhir);
+      document.getElementById("dashNilaiStok").innerText = formatRp(calc.nilaiAsetStok);
+
+      // KAS TERUPDATE SINKRON PRESISI
+      document.getElementById("saldoKasTunai").innerText = formatRp(calc.kasTunai);
+      document.getElementById("saldoKasBank").innerText = formatRp(calc.kasBank);
+      document.getElementById("saldoKasKecil").innerText = formatRp(calc.kasKecil);
+      document.getElementById("saldoHutangKredit").innerText = formatRp(calc.hutangTotal);
+
+      const tbody = document.getElementById("dashRecentTable");
+      tbody.innerHTML = "";
+      const recent = transactions.slice(0, 5);
+
+      if (recent.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada transaksi recorded.</td></tr>`;
+        return;
+      }
+
+      recent.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3">${t.tanggal}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 text-xs font-semibold rounded ${t.jenis === 'MASUK' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${t.jenis}</span>
+          </td>
+          <td class="p-3 font-medium text-slate-800">${t.subjek}</td>
+          <td class="p-3 text-xs text-slate-500">${t.kategori || '-'}</td>
+          <td class="p-3 text-right font-semibold ${t.jenis === 'MASUK' ? 'text-emerald-600' : 'text-rose-600'}">${formatRp(t.nominal)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function processSpecificReportDownload() {
+      const reportType = document.getElementById("exportReportType").value;
+      closeModal("modalExportReport");
+
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const timeStr = today.toLocaleTimeString('id-ID');
+
+      const calc = calculateFinancialData();
+
+      let txt = `=================================================================\n`;
+      txt += `          LAPORAN KEUANGAN KELENGKAPAN STANDAR SAK EMKM           \n`;
+      txt += `                   RUMAH SEHAT INSANI (PADANG)                   \n`;
+      txt += `=================================================================\n`;
+      txt += `Tanggal Cetak : ${dateStr} Pukul ${timeStr} WIB\n`;
+      txt += `Jenis Laporan : ${getReportTypeName(reportType)}\n`;
+      txt += `-----------------------------------------------------------------\n\n`;
+
+      if (reportType === "ALL" || reportType === "LABA_RUGI") {
+        txt += `1. LAPORAN LABA RUGI OPERASIONAL (INCOME STATEMENT)\n`;
+        txt += `-----------------------------------------------------------------\n`;
+        txt += `A. PENDAPATAN OPERASIONAL\n`;
+        txt += `   * 4110 - Penjualan Herbal & Produk : ${formatRp(calc.totalPenjualanHerbal)}\n`;
+        txt += `   * 4120 - Potongan & Diskon         : (${formatRp(calc.totalPotonganDiskon)})\n`;
+        txt += `   * 4210 - Layanan TCM & Konsultasi  : ${formatRp(calc.totalLayananTcm)}\n`;
+        txt += `   --------------------------------------------------------------\n`;
+        txt += `   TOTAL PENDAPATAN OPERASIONAL BERSIH: ${formatRp(calc.totalPendapatanKotor)}\n\n`;
+
+        txt += `B. BEBAN POKOK PENJUALAN (HPP)\n`;
+        txt += `   * 5110 - HPP Herbal Terjual        : (${formatRp(calc.totalHppHerbal)})\n`;
+        txt += `   --------------------------------------------------------------\n`;
+        txt += `   LABA KOTOR (GROSS PROFIT)          : ${formatRp(calc.labaKotor)}\n\n`;
+
+        txt += `C. BEBAN-BEBAN OPERASIONAL (OPERATIONAL EXPENSES)\n`;
+        for (const [kategoriBeban, nominalBeban] of Object.entries(calc.bebanBeban)) {
+          txt += `   * ${kategoriBeban.padEnd(32)} : (${formatRp(nominalBeban)})\n`;
+        }
+        txt += `   --------------------------------------------------------------\n`;
+        txt += `   TOTAL BEBAN OPERASIONAL            : (${formatRp(calc.totalBebanOperasional)})\n`;
+        txt += `-----------------------------------------------------------------\n`;
+        txt += `= LABA BERSIH OPERASIONAL (NET PROFIT): ${formatRp(calc.labaBersihAkhir)}\n\n`;
+      }
+
+      if (reportType === "ALL" || reportType === "NERACA_KAS") {
+        txt += `2. NERACA KAS, EKUITAS & KEWAJIBAN (BALANCE SHEET SUMMARY)\n`;
+        txt += `-----------------------------------------------------------------\n`;
+        txt += `A. KAS LIQUID & BANK\n`;
+        txt += `   * 1110 - Saldo Kas Tunai Klinik    : ${formatRp(calc.kasTunai)}\n`;
+        txt += `   * 1120 - Saldo Bank BRI / Rekening : ${formatRp(calc.kasBank)}\n`;
+        txt += `   * 1130 - Saldo Kas Kecil           : ${formatRp(calc.kasKecil)}\n`;
+        txt += `   --------------------------------------------------------------\n`;
+        txt += `   TOTAL KAS LIQUID                   : ${formatRp(calc.kasTunai + calc.kasBank + calc.kasKecil)}\n\n`;
+
+        txt += `B. ASET PERSEDIAAN HERBAL (INVENTORY ASSET)\n`;
+        txt += `   * 1150 - Total Nilai Persediaan    : ${formatRp(calc.nilaiAsetStok)}\n\n`;
+
+        txt += `C. EKUITAS / MODAL PEMILIK\n`;
+        txt += `   * 3110 - Total Setoran Modal       : ${formatRp(calc.totalModalPemilik)}\n\n`;
+
+        txt += `D. KEWAJIBAN / HUTANG KREDIT (LIABILITIES)\n`;
+        txt += `   * 2100 - Total Hutang Usaha/Kredit : ${formatRp(calc.hutangTotal)}\n`;
+        txt += `-----------------------------------------------------------------\n\n`;
+      }
+
+      if (reportType === "ALL" || reportType === "STOK_HERBAL") {
+        txt += `3. RINCIAN PERSEDIAAN STOK HERBAL REAL-TIME\n`;
+        txt += `-----------------------------------------------------------------\n`;
+        if (inventory.length === 0) {
+          txt += `   (Belum ada data master herbal terdaftar)\n`;
+        } else {
+          inventory.forEach((i, idx) => {
+            const st = i.qty === 0 ? "[HABIS]" : (i.qty < 50 ? "[STOK MENIPIS]" : "[TERSEDIA]");
+            txt += `   ${idx + 1}. ${i.nama.padEnd(25)} : ${i.qty} ${i.satuan} | HPP/Unit: ${formatRp(i.hppUnit)} | ${st}\n`;
+          });
+        }
+        txt += `\n`;
+      }
+
+      if (reportType === "ALL" || reportType === "JURNAL") {
+        txt += `4. RINCIAN JURNAL TRANSAKSI LENGKAP\n`;
+        txt += `-----------------------------------------------------------------\n`;
+        transactions.forEach(t => {
+          txt += `[${t.tanggal}] ${t.jenis.padEnd(6)} | ${(t.kategori||'-').padEnd(32)} | ${t.subjek.padEnd(25)} | Rp ${t.nominal.toLocaleString('id-ID')} | Met: ${t.akunKas||'-'}\n`;
+        });
+        txt += `\n`;
+      }
+
+      txt += `=================================================================\n`;
+      txt += `       Diterbitkan Otomatis oleh Sistem Keuangan Klinik RSI      \n`;
+      txt += `=================================================================\n`;
+
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Laporan_${reportType}_SAK_RSI_${dateStr}.txt`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showStatus(`Laporan ${getReportTypeName(reportType)} (.txt) berhasil diunduh!`, "success");
+    }
+
+    function getReportTypeName(type) {
+      if (type === "LABA_RUGI") return "Laba Rugi Operasional";
+      if (type === "NERACA_KAS") return "Neraca Kas, Bank BRI & Kewajiban";
+      if (type === "STOK_HERBAL") return "Rincian Persediaan Stok Herbal";
+      if (type === "JURNAL") return "Jurnal Transaksi Lengkap";
+      return "Ringkasan Komprehensif SAK EMKM";
+    }
+
+    function renderStokTable() {
+      const tbody = document.getElementById("stokTableBody");
+      tbody.innerHTML = "";
+
+      if (inventory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data persediaan herbal. Tambahkan master herbal baru.</td></tr>`;
+        return;
+      }
+
+      inventory.forEach(i => {
+        const totalAset = i.qty * i.hppUnit;
+        let badge = `<span class="px-2 py-1 text-xs font-bold rounded bg-emerald-100 text-emerald-800">Tersedia</span>`;
+        if (i.qty === 0) badge = `<span class="px-2 py-1 text-xs font-bold rounded bg-rose-100 text-rose-800">Habis</span>`;
+        else if (i.qty < 50) badge = `<span class="px-2 py-1 text-xs font-bold rounded bg-amber-100 text-amber-800">Stok Menipis</span>`;
+
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${i.nama}</td>
+          <td class="p-3 font-semibold text-slate-700">${i.qty} ${i.satuan}</td>
+          <td class="p-3 text-right text-slate-600">${formatRp(i.hppUnit)} / ${i.satuan}</td>
+          <td class="p-3 text-right font-bold text-amber-600">${formatRp(totalAset)}</td>
+          <td class="p-3 text-center">${badge}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="editStok('${i.id}')" title="Perbaikan Stok" class="text-amber-600 hover:text-amber-800 p-1">
+              <i data-lucide="edit" class="w-4 h-4"></i>
+            </button>
+            <button onclick="deleteStok('${i.id}')" title="Hapus Master Stok" class="text-rose-500 hover:text-rose-700 p-1">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function renderJurnal() {
+      const tbody = document.getElementById("jurnalTableBody");
+      tbody.innerHTML = "";
+
+      const filterJenis = document.getElementById("filterJenis").value;
+      const search = document.getElementById("searchJurnal").value.toLowerCase();
+
+      const filtered = transactions.filter(t => {
+        const matchJenis = (filterJenis === "ALL" || t.jenis === filterJenis);
+        const matchSearch = t.subjek.toLowerCase().includes(search) || (t.keterangan || "").toLowerCase().includes(search) || (t.kategori||"").toLowerCase().includes(search);
+        return matchJenis && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">Tidak ada transaksi ditemukan.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 whitespace-nowrap">${t.tanggal}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 text-xs font-semibold rounded ${t.jenis === 'MASUK' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${t.jenis}</span>
+          </td>
+          <td class="p-3 font-medium text-slate-800">${t.subjek}</td>
+          <td class="p-3 text-xs text-slate-500">${t.kategori || '-'}</td>
+          <td class="p-3 text-right font-semibold ${t.jenis === 'MASUK' ? 'text-emerald-600' : 'text-rose-600'}">${formatRp(t.nominal)}</td>
+          <td class="p-3 text-right text-slate-500">${formatRp(t.hpp)}</td>
+          <td class="p-3 text-right font-medium text-teal-700">${formatRp(t.laba)}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="viewTx('${t.id}')" title="Lihat Detail" class="text-blue-600 hover:text-blue-800 p-1">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+            <button onclick="editTx('${t.id}')" title="Edit Transaksi" class="text-indigo-600 hover:text-indigo-800 p-1">
+              <i data-lucide="edit-3" class="w-4 h-4"></i>
+            </button>
+            <button onclick="deleteTx('${t.id}')" title="Hapus Transaksi & Adjust Stok" class="text-rose-500 hover:text-rose-700 p-1">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function exportToJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ transactions, inventory }, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Backup_Keuangan_SAK_RSI_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function exportToCSV() {
+      if (transactions.length === 0) { alert("Tidak ada data transaksi!"); return; }
+      let csv = "ID,Tanggal,Jenis,Subjek,Kategori,AkunKas,Nominal,HPP,Laba,Keterangan\n";
+      transactions.forEach(t => {
+        csv += `"${t.id}","${t.tanggal}","${t.jenis}","${t.subjek.replace(/"/g, '""')}","${t.kategori||''}","${t.akunKas||''}",${t.nominal},${t.hpp},${t.laba},"${(t.keterangan||'').replace(/"/g, '""')}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Laporan_Jurnal_SAK_RSI_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function formatRp(val) { return "Rp " + Number(val || 0).toLocaleString("id-ID"); }
+
+    function renderAll() {
+      renderDashboard();
+      renderStokTable();
+      renderJurnal();
+    }
+
+    function showStatus(msg, type = "info") {
+      const banner = document.getElementById("syncStatus");
+      banner.classList.remove("hidden", "bg-emerald-100", "text-emerald-800", "bg-rose-100", "text-rose-800", "bg-sky-100", "text-sky-800");
+
+      if (type === "success") banner.classList.add("bg-emerald-100", "text-emerald-800");
+      else if (type === "error") banner.classList.add("bg-rose-100", "text-rose-800");
+      else banner.classList.add("bg-sky-100", "text-sky-800");
+
+      banner.innerText = msg;
+      setTimeout(() => { banner.classList.add("hidden"); }, 5000);
+    }
+  </script>
+</body>
+</html>
